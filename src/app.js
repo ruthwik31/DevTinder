@@ -2,21 +2,56 @@ const express = require("express");
 const connectDB = require("./config/database");
 const app = express();
 const User = require("./models/user");
+const { validateSignUpData } = require("./utils/validation");
+const bcrypt = require("bcrypt");
 
 app.use(express.json());
 
-//post
+// post
 app.post("/signup", async (req, res) => {
-  //console.log(req.body);
-  const user = new User(req.body);
-  if (Array.isArray(user.skills) && user.skills.length > 10) {
-    return res.status(400).send("Skills cannot exceed 10 items");
-  }
   try {
+    // Validate the request body
+    validateSignUpData(req);
+
+    //encrypt password
+    const { first_name, last_name, emailId, password } = req.body;
+    const existingUser = await User.findOne({ emailId });
+    if (existingUser) {
+      return res.status(400).send("Email already exists");
+    }
+    const passwordHash = await bcrypt.hash(password, 10);
+    // req.body.password = passwordHash;
+
+    //console.log(req.body);
+    // const user = new User(req.body);
+    const user = new User({
+      first_name,
+      last_name,
+      emailId,
+      password: passwordHash,
+    });
     await user.save();
     res.status(201).send("User created successfully");
   } catch (error) {
     res.status(400).send("Error creating user: " + error.message);
+  }
+});
+
+//Login API
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    const user = await User.findOne({ emailId });
+    if (!user) {
+      return res.status(400).send("Invalid email or password");
+    }
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).send("Invalid email or password");
+    }
+    res.send("Login successful");
+  } catch (error) {
+    res.status(400).send("Error logging in: " + error.message);
   }
 });
 
