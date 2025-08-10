@@ -9,6 +9,9 @@ app.use(express.json());
 app.post("/signup", async (req, res) => {
   //console.log(req.body);
   const user = new User(req.body);
+  if (Array.isArray(user.skills) && user.skills.length > 10) {
+    return res.status(400).send("Skills cannot exceed 10 items");
+  }
   try {
     await user.save();
     res.status(201).send("User created successfully");
@@ -56,15 +59,34 @@ app.delete("/user", async (req, res) => {
 });
 
 //update
-app.patch("/user", async (req, res) => {
-  // const data = req.body;
-  // const userId = data.emailId;
-  const { emailId, ...data } = req.body;
+//run validation on the entire object
+app.patch("/user/:userId", async (req, res) => {
+  const data = req.body;
+  //const userId = data.userId;
+  const userId = req.params?.userId;
+  if (data.skills > 10) {
+    return res.status(400).send("Skills array cannot exceed 10 items");
+  }
+  const allowedUpdates = [
+    "userId",
+    "first_name",
+    "photoUrl",
+    "last_name",
+    "password",
+    "age",
+    "about",
+    "skills",
+  ];
+  const isUpdateAllowed = Object.keys(data).every((key) =>
+    allowedUpdates.includes(key)
+  );
+  if (!isUpdateAllowed) {
+    return res.status(400).send("Invalid update fields");
+  }
   try {
-    const user = await User.findOneAndUpdate({ emailId: emailId }, data);
-    if (!user) {
-      return res.status(404).send("User not found");
-    }
+    await User.findByIdAndUpdate(userId, data, {
+      runValidators: true,
+    });
     res.send("User updated successfully");
   } catch (error) {
     res.status(400).send("Error updating user: " + error.message);
