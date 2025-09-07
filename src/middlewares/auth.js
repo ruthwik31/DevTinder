@@ -1,21 +1,21 @@
-const adminAuth = (req, res, next) => {
-  console.log("Middleware for admin route");
-  const t = "xyz";
-  const isAdminAuthorized = t === "xyz";
-  if (!isAdminAuthorized) {
-    res.status(401).send("unauthorized request");
-  } else {
+const jwt = require("jsonwebtoken");
+const User = require("../models/user");
+const userAuth = async (req, res, next) => {
+  try {
+    const { token } = req.cookies;
+    if (!token) {
+      throw new Error("Access denied. No token provided.");
+    }
+    const decodedObj = await jwt.verify(token, "DEV@RUTHWIK$31");
+    const { _id } = decodedObj;
+    const user = await User.findById(_id);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    req.user = user;
     next();
+  } catch (error) {
+    return res.status(401).send("ERROR: " + error.message);
   }
 };
-const userAuth = (req, res, next) => {
-  console.log("Middleware for user route");
-  const t = "xyz";
-  const isAdminAuthorized = t === "xyz";
-  if (!isAdminAuthorized) {
-    res.status(401).send("unauthorized request");
-  } else {
-    next();
-  }
-};
-module.exports = { adminAuth, userAuth };
+module.exports = { userAuth };

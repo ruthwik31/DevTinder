@@ -4,8 +4,12 @@ const app = express();
 const User = require("./models/user");
 const { validateSignUpData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
+const { userAuth } = require("./middlewares/auth");
 
 app.use(express.json());
+app.use(cookieParser());
 
 // post
 app.post("/signup", async (req, res) => {
@@ -45,18 +49,32 @@ app.post("/login", async (req, res) => {
     if (!user) {
       return res.status(400).send("Invalid email or password");
     }
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.validatePassword(password);
     if (!isPasswordValid) {
       return res.status(400).send("Invalid email or password");
+    } else {
+      // Generate JWT token
+      const token = await user.getJWT();
+      res.cookie("token", token, { httpOnly: true });
+      res.send("Login successful");
     }
-    res.send("Login successful");
   } catch (error) {
     res.status(400).send("Error logging in: " + error.message);
   }
 });
 
-//get user by email
-app.get("/user", async (req, res) => {
+//profile API
+app.get("/profile", userAuth, async (req, res) => {
+  try {
+    const user = req.user; // user is set by userAuth middleware
+    res.send(user);
+  } catch (error) {
+    res.status(400).send("Error logging in: " + error.message);
+  }
+});
+
+//get user by email+
+app.get("/user", userAuth, async (req, res) => {
   const userEmail = req.body.emailId;
   try {
     //findOne returns a single document, not an array
@@ -73,7 +91,7 @@ app.get("/user", async (req, res) => {
 });
 
 //Feed Api -GET/feed -get users from database
-app.get("/feed", async (req, res) => {
+app.get("/feed", userAuth, async (req, res) => {
   try {
     const users = await User.find({});
     res.send(users);
@@ -82,8 +100,13 @@ app.get("/feed", async (req, res) => {
   }
 });
 
+app.post("/sendConnectionRequest", userAuth, async (req, res) => {
+  const user = req.user;
+  console.log("sendConnectionRequest called");
+  res.send(user.first_name + ": Connection request sent");
+});
 //delete
-app.delete("/user", async (req, res) => {
+app.delete("/user", userAuth, async (req, res) => {
   const userId = req.body.userId;
   try {
     const user = await User.findByIdAndDelete(userId);
@@ -95,7 +118,7 @@ app.delete("/user", async (req, res) => {
 
 //update
 //run validation on the entire object
-app.patch("/user/:userId", async (req, res) => {
+app.patch("/user/:userId", userAuth, async (req, res) => {
   const data = req.body;
   //const userId = data.userId;
   const userId = req.params?.userId;
