@@ -5,5 +5,5 @@ const connectDB = async () => {
   );
 };
 //retrun the proimse
-
+console.log("MongoDB connected");
 module.exports = connectDB;

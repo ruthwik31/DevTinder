@@ -2,6 +2,7 @@ const express = require("express");
 const profileRouter = express.Router();
 const { userAuth } = require("../middlewares/auth");
 const User = require("../models/user");
+const { validateEditProfileData } = require("../utils/validation");
 
 //profile API
 profileRouter.get("/profile", userAuth, async (req, res) => {
@@ -83,4 +84,23 @@ profileRouter.patch("/user/:userId", userAuth, async (req, res) => {
     res.status(400).send("Error updating user: " + error.message);
   }
 });
+
+profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
+  try {
+    if (!validateEditProfileData(req)) {
+      return res.status(400).send("Invalid update fields");
+    }
+    const loggeduser = req.user;
+    // console.log("Authenticated user:", user);
+    const updates = req.body;
+    Object.keys(updates).forEach((key) => {
+      loggeduser[key] = updates[key];
+    });
+    await loggeduser.save();
+    res.send("Profile updated successfully");
+  } catch (error) {
+    res.status(400).send("Error updating profile: " + error.message);
+  }
+});
+
 module.exports = profileRouter;

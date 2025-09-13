@@ -11,6 +11,23 @@ const validateSignUpData = (req) => {
     throw new Error("Skills array cannot exceed 10 items");
   }
 };
+const validateEditProfileData = (req) => {
+  const allowedEditFields = [
+    "emailId",
+    "first_name",
+    "photoUrl",
+    "last_name",
+    "password",
+    "age",
+    "about",
+    "skills",
+  ];
+  const isEditAllowed = Object.keys(req.body).every((field) =>
+    allowedEditFields.includes(field)
+  );
+  return isEditAllowed;
+};
 module.exports = {
   validateSignUpData,
+  validateEditProfileData,
 };
