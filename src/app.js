@@ -9,11 +9,13 @@ app.use(cookieParser());
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const reqRouter = require("./routes/request");
+const user = require("./models/user");
+const userRouter = require("./routes/user");
 
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", reqRouter);
-
+app.use("/", userRouter);
 connectDB()
   .then(() => {
     console.log("MongoDB connected successfully");
