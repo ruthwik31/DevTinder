@@ -7,12 +7,18 @@ const userSchema = new mongoose.Schema(
     first_name: {
       type: String,
       required: true,
-      index: true,
       minLength: 4,
       maxLength: 20,
+      match: [/^[a-zA-Z\s'-.]+$/, "Please enter a valid First name"],
+      trim: true,
     },
     last_name: {
       type: String,
+      required: true,
+      minlength: 2,
+      maxLength: 50,
+      match: [/^[a-zA-Z\s'-.]+$/, "Please enter a valid First name"],
+      trim: true,
     },
     emailId: {
       type: String,
@@ -22,7 +28,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       validate(value) {
         if (!validator.isEmail(value)) {
-          throw new Error("Invalid email");
+          throw new Error("Invalid email Address: " + value);
         }
       },
     },

@@ -1,4 +1,19 @@
 const validator = require("validator");
+const validateNewPassword = (req) => {
+  if (!req.body || !req.body.newPassword) {
+    throw new Error("Password is missing");
+  }
+  const { newPassword } = req.body;
+  try {
+    if (!validator.isStrongPassword(newPassword)) {
+      throw new Error("The password is not Strong Enough");
+    } else {
+      return true;
+    }
+  } catch (err) {
+    return false;
+  }
+};
 const validateSignUpData = (req) => {
   const { first_name, last_name, emailId, password, skills } = req.body;
   if (!first_name) {
@@ -30,4 +45,5 @@ const validateEditProfileData = (req) => {
 module.exports = {
   validateSignUpData,
   validateEditProfileData,
+  validateNewPassword,
 };
