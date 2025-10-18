@@ -3,11 +3,13 @@ const connectionRequestSchema = new mongoose.Schema(
   {
     fromUserId: {
       type: mongoose.Schema.Types.ObjectId,
+      index: true,
       ref: "user",
       required: true,
     },
     toUserId: {
       type: mongoose.Schema.Types.ObjectId,
+      index: true,
       ref: "user",
       required: true,
     },
@@ -15,7 +17,7 @@ const connectionRequestSchema = new mongoose.Schema(
       type: String,
       required: true,
       enum: {
-        values: ["ignore", "interested", "accepted", "rejected"],
+        values: ["ignored", "interested", "accepted", "rejected"],
         message: `{VALUE} is incorrect support type`,
       },
     },
@@ -24,6 +26,7 @@ const connectionRequestSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 });
 connectionRequestSchema.pre("save", function () {
   const connectionRequest = this;
   //check if fromUserId and toUserId are same
