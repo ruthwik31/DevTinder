@@ -85,6 +85,9 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+userSchema.index({ first_name: 1, last_name: 1 });
+
 userSchema.methods.getJWT = async function () {
   const user = this;
   const token = await jwt.sign({ _id: user._id }, "DEV@RUTHWIK$31", {
@@ -99,4 +102,5 @@ userSchema.methods.validatePassword = async function (password) {
 };
 // const User = mongoose.model("User", userSchema);
 // module.exports = User;
+mongoose.model("User", userSchema);
 module.exports = mongoose.model("User", userSchema);
