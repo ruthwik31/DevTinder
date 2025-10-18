@@ -2,6 +2,7 @@ const express = require("express");
 const profileRouter = express.Router();
 const { userAuth } = require("../middlewares/auth");
 const User = require("../models/user");
+const bcrypt = require("bcrypt");
 const {
   validateEditProfileData,
   validateNewPassword,
